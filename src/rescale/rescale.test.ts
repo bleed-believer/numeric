@@ -218,7 +218,11 @@ describe('rescale(BaseObject, number, RoundMode) modes', () => {
             for (const row of table) {
                 const input = { value: row[0], scale: 1 };
                 const expected = row[i + 1];
-                it(`${input} to scale 0 → ${expected}`, (t: it.TestContext) => {
+
+                // Every input has scale 1, so it reads as "<int>.<last digit>" (e.g. -25n → -2.5).
+                const abs = input.value < 0n ? -input.value : input.value;
+                const label = `${input.value < 0n ? '-' : ''}${abs / 10n}.${abs % 10n}`;
+                it(`${label} to scale 0 → ${expected}`, (t: it.TestContext) => {
                     const r = rescale(input, 0, mode);
                     t.assert.strictEqual(r.scale, 0);
                     t.assert.strictEqual(r.value, expected);

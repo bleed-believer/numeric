@@ -1,5 +1,5 @@
 import { describe, it } from 'node:test';
-import { RoundMode } from './rescale/index.js';
+import { RoundMode } from '../rescale/index.js';
 import { Numeric } from './numeric.js';
 
 describe('Numeric', () => {

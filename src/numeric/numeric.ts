@@ -1,9 +1,10 @@
-import type { RoundMode } from './rescale/index.js';
+import type { BaseObject } from './interfaces/index.js';
+import type { RoundMode } from '../rescale/index.js';
 
-import { add, multiply, split, subtract } from './operators/index.js';
-import { normalize } from './normalize/index.js';
-import { rescale } from './rescale/index.js';
-import { Base } from './base/index.js';
+import { add, multiply, split, subtract } from '../operators/index.js';
+import { normalize } from '../normalize/index.js';
+import { rescale } from '../rescale/index.js';
+import { Base } from '../base/index.js';
 
 /**
  * An immutable decimal number with arbitrary precision, backed by a `bigint` and a scale
@@ -45,7 +46,7 @@ export class Numeric {
      * @throws {RangeError} If the scale is negative, isn't an integer, or exceeds the
      * maximum scale.
      */
-    constructor(input: string | number | bigint | { value: bigint; scale: number; }) {
+    constructor(input: string | number | bigint | BaseObject) {
         switch (typeof input) {
             case 'bigint':
             case 'number':
@@ -196,9 +197,9 @@ export class Numeric {
      *
      * @example
      * const one = new Numeric('1');
-     * one.split(new Numeric('3'), 6).toString();                  // "0.333333"
-     * one.split(new Numeric('8'), 2, RoundMode.HalfEven).toString(); // "0.12"
-     * one.split(new Numeric('2'), 6).toString();                  // "0.5"
+     * one.split(new Numeric('3'), 6).toString();                       // "0.333333"
+     * one.split(new Numeric('8'), 2, RoundMode.HalfEven).toString();   // "0.12"
+     * one.split(new Numeric('2'), 6).toString();                       // "0.5"
      */
     split(n: Numeric, decimals: number, mode?: RoundMode): Numeric {
         const r = split(this.#value, n.#value, decimals, mode);

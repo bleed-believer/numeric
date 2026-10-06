@@ -1,2 +1,2 @@
 export { RoundMode } from './rescale/index.js';
-export { Numeric } from './numeric.js';
+export { Numeric } from './numeric/index.js';
