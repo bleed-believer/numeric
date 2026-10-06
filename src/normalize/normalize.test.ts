@@ -39,6 +39,18 @@ describe('normalize(BaseObject) operator', () => {
         t.assert.strictEqual(r.value, 0n);
     });
 
+    it('0 at scale Infinity → 0 (does not loop forever)', (t: it.TestContext) => {
+        const r = normalize({ value: 0n, scale: Infinity });
+        t.assert.strictEqual(r.scale, 0);
+        t.assert.strictEqual(r.value, 0n);
+    });
+
+    it('0 at scale 1e8 → 0 (does not loop through the scale)', (t: it.TestContext) => {
+        const r = normalize({ value: 0n, scale: 1e8 });
+        t.assert.strictEqual(r.scale, 0);
+        t.assert.strictEqual(r.value, 0n);
+    });
+
     it('-12.3400 → -12.34', (t: it.TestContext) => {
         const r = normalize({ value: -123400n, scale: 4 });
         t.assert.strictEqual(r.scale, 2);

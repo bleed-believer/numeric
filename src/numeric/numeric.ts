@@ -84,6 +84,14 @@ export class Numeric {
                     typeof input?.value === 'bigint' &&
                     typeof input?.scale === 'number'
                 ) {
+                    // `normalize` turns any zero into scale 0, so an invalid scale must be
+                    // rejected before it disappears. The maximum is checked afterwards by
+                    // `Base`, because a result may exceed it only before being normalized
+                    // (e.g. a product whose trailing zeros are removed).
+                    if (!Number.isInteger(input.scale) || input.scale < 0) {
+                        throw new RangeError(`The scale value ${input.scale} must be a non-negative integer`);
+                    }
+
                     const { value, scale } = normalize(input);
                     this.#value = new Base(value, scale);
                 } else {

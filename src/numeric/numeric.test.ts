@@ -85,4 +85,36 @@ describe('Numeric', () => {
             t.assert.throws(() => n.toFixed(16384), RangeError);
         });
     });
+
+    describe('new Numeric(BaseObject)', () => {
+        it(`{ 0n, scale 1e8 } → '0' without looping`, (t: it.TestContext) => {
+            const n = new Numeric({ value: 0n, scale: 1e8 });
+            t.assert.strictEqual(n.toString(), '0');
+        });
+
+        it(`{ 0n, scale -1 } → RangeError`, (t: it.TestContext) => {
+            t.assert.throws(() => new Numeric({ value: 0n, scale: -1 }), RangeError);
+        });
+
+        it(`{ 0n, scale 1.5 } → RangeError`, (t: it.TestContext) => {
+            t.assert.throws(() => new Numeric({ value: 0n, scale: 1.5 }), RangeError);
+        });
+
+        it(`{ 0n, scale Infinity } → RangeError`, (t: it.TestContext) => {
+            t.assert.throws(() => new Numeric({ value: 0n, scale: Infinity }), RangeError);
+        });
+
+        it(`{ 0n, scale NaN } → RangeError`, (t: it.TestContext) => {
+            t.assert.throws(() => new Numeric({ value: 0n, scale: NaN }), RangeError);
+        });
+
+        it(`{ 1n, scale 16384 } → RangeError`, (t: it.TestContext) => {
+            t.assert.throws(() => new Numeric({ value: 1n, scale: 16384 }), RangeError);
+        });
+
+        it(`a scale beyond the maximum is accepted if normalizing brings it back`, (t: it.TestContext) => {
+            const n = new Numeric({ value: 10n ** 2000n, scale: 18000 });
+            t.assert.strictEqual(n.toFixed(16000), `0.${'0'.repeat(15999)}1`);
+        });
+    });
 });
