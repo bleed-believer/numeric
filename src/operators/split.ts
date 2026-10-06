@@ -1,6 +1,7 @@
 import type { BaseObject } from './interfaces/index.js';
 
 import { RoundMode, rescale } from '../rescale/index.js';
+import { pow10 } from '../pow10/index.js';
 
 /**
  * Divides `a` by `b`. A division may never end (`1 / 3 = 0.333…`), so the scale of the
@@ -41,8 +42,8 @@ export function split(
     // `bigint` has no negative powers, so when the exponent is negative (e.g. 0.001 / 2
     // at scale 0 → exponent -2), the power of ten multiplies the divisor instead:
     //     a.value * 10^-2 / b.value  ===  a.value / (b.value * 10^2)
-    const dividend = exponent >= 0 ? a.value * 10n ** BigInt(exponent) : a.value;
-    const divisor  = exponent >= 0 ? b.value : b.value * 10n ** BigInt(-exponent);
+    const dividend = exponent >= 0 ? a.value * pow10(exponent) : a.value;
+    const divisor  = exponent >= 0 ? b.value : b.value * pow10(-exponent);
 
     // Both sides are integers now, so the native division gives the quotient truncated
     // towards zero, with the guard digit as its last digit.

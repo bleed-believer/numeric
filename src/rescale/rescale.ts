@@ -1,12 +1,13 @@
 import type { BaseObject } from './interfaces/index.js';
 
 import { RoundMode } from './round-mode.js';
+import { pow10 } from '../pow10/index.js';
 
 export function rescale(target: BaseObject, scale: number, mode?: RoundMode): BaseObject {
     mode ??= RoundMode.HalfUp;
 
     if (scale > target.scale) {
-        const delta = 10n ** BigInt(scale - target.scale);
+        const delta = pow10(scale - target.scale);
         const value = target.value * delta;
         return { value, scale };
 
@@ -15,7 +16,7 @@ export function rescale(target: BaseObject, scale: number, mode?: RoundMode): Ba
         // and the sign is applied back at the end.
         const negative = target.value < 0n;
         const abs = negative ? -target.value : target.value;
-        const divisor = 10n ** BigInt(target.scale - scale);
+        const divisor = pow10(target.scale - scale);
 
         let value = abs / divisor;
         const remainder = abs % divisor;
