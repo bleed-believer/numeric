@@ -1,0 +1,25 @@
+{
+  "name": "@bleed-believer/numeric",
+  "type": "module",
+  "version": "0.0.0",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "files": [ "dist" ],
+  "scripts": {
+    "test-only": "node --import @bleed-believer/cli --test --test-only --",
+    "test": "node --import @bleed-believer/cli --test --",
+    "build:cls": "rm -rf ./dist",
+    "build:mjs": "bleed build --config ./tsconfig.build.json",
+    "build:dts": "tsc --project ./tsconfig.build.json",
+    "build": "node --run build:cls && node --run build:mjs && node --run build:dts"
+  },
+  "devDependencies": {
+    "@bleed-believer/cli": "^1.1.0",
+    "@types/node": "^26.6.4",
+    "typescript": "^7.0.2"
+  }
+}
