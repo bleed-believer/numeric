@@ -33,20 +33,20 @@ export class Base {
     }
 
     toString(): string {
+        const scale = this.#scale;
+        if (scale === 0) {
+            return this.#value.toString();
+        }
+
+        // Works with the absolute value, so the sign never ends up between the digits.
         const negative = this.#value < 0n;
-        const flat = this.#value
-            .toString()
-            .replace(/^-/, '')
-            .padStart(this.#scale + 1, '0');
+        let flat = (negative ? -this.#value : this.#value).toString();
+        if (flat.length <= scale) {
+            // At least one integer digit: `6n` at scale 3 → `"0006"` → `"0.006"`.
+            flat = '0'.repeat(scale - flat.length + 1) + flat;
+        }
 
-        const cut = flat.length - this.#scale;
-        const int = flat.slice(0, cut);
-        const dec = flat.slice(cut);
-
-        return [
-            negative ? '-' : '',
-            int,
-            dec.length > 0 ? `.${dec}` : ''
-        ].join('');
+        const cut = flat.length - scale;
+        return (negative ? '-' : '') + flat.slice(0, cut) + '.' + flat.slice(cut);
     }
 }

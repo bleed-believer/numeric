@@ -56,6 +56,25 @@ describe('Base', () => {
             const v = n.toString();
             t.assert.strictEqual(v, '-12.0');
         });
+        it(`new Base(5n, 1).toString()`, (t: it.TestContext) => {
+            t.assert.strictEqual(new Base(5n, 1).toString(), '0.5');
+        });
+
+        it(`new Base(-5n, 1).toString()`, (t: it.TestContext) => {
+            t.assert.strictEqual(new Base(-5n, 1).toString(), '-0.5');
+        });
+
+        it(`new Base(15n, 1).toString()`, (t: it.TestContext) => {
+            t.assert.strictEqual(new Base(15n, 1).toString(), '1.5');
+        });
+
+        it(`new Base(-1000n, 3).toString()`, (t: it.TestContext) => {
+            t.assert.strictEqual(new Base(-1000n, 3).toString(), '-1.000');
+        });
+
+        it(`new Base(1n, 20).toString()`, (t: it.TestContext) => {
+            t.assert.strictEqual(new Base(1n, 20).toString(), `0.${'0'.repeat(19)}1`);
+        });
     });
 
     describe('Base.validateScale()', () => {

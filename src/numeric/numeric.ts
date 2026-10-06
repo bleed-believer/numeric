@@ -6,6 +6,9 @@ import { normalize } from '../normalize/index.js';
 import { rescale } from '../rescale/index.js';
 import { Base } from '../base/index.js';
 
+// An optional `-`, at least one integer digit, and optionally a `.` with at least one digit.
+const DECIMAL_REGEX = /^-?[0-9]+(?:\.[0-9]+)?$/;
+
 /**
  * An immutable decimal number with arbitrary precision, backed by a `bigint` and a scale
  * (the amount of digits after the decimal point). Unlike `number`, every operation is
@@ -55,27 +58,29 @@ export class Numeric {
                     input = input.toString();
                 }
 
-                const regex = /^(?<int>-?[0-9]+)(?:\.(?<dec>[0-9]+))?$/;
-                const parts = regex.exec(input)?.groups as {
-                    int: string;
-                    dec: string;
-                };
-
-                if (!parts) {
+                if (!DECIMAL_REGEX.test(input)) {
                     throw new TypeError(`The value "${input}" isn't a safe number`);
                 }
 
-                if (typeof parts.dec !== 'string') {
-                    parts.dec = '';
+                const dot = input.indexOf('.');
+                if (dot === -1) {
+                    this.#value = new Base(BigInt(input));
+                    break;
                 }
 
-                const target = new Base(
-                    BigInt(parts.int + parts.dec),
-                    parts.dec.length
-                );
+                // The written decimals are validated before removing the trailing zeros,
+                // so a string with too many decimals is rejected even if they are zeros.
+                Base.validateScale(input.length - dot - 1);
 
-                const { value, scale } = normalize(target);
-                this.#value = new Base(value, scale);
+                // Normalizes on the string, which is cheaper than dividing the bigint by 10
+                // once per trailing zero: `"1.500"` → `"1.5"`, `"10.00"` → `"10"`.
+                let end = input.length;
+                while (end > dot + 1 && input.charCodeAt(end - 1) === 48 /* '0' */) {
+                    end--;
+                }
+
+                const dec = input.slice(dot + 1, end);
+                this.#value = new Base(BigInt(input.slice(0, dot) + dec), dec.length);
                 break;
             }
 
