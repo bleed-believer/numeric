@@ -29,6 +29,20 @@ const DECIMAL_REGEX = /^-?[0-9]+(?:\.[0-9]+)?$/;
  */
 export class Numeric {
     /**
+     * Wraps the result of adding or subtracting `a` and `b`. Both operands are normalized,
+     * so the one with more decimals never ends in `0`. When their scales differ, the other
+     * one is shifted up (ending in zeros), and the last digit of the result is the non-zero
+     * one: there is nothing to normalize, which saves a costly `% 10n` on long values.
+     */
+    static #fromSum(result: BaseObject, a: Base, b: Base): Numeric {
+        if (a.scale !== b.scale) {
+            return new Numeric(new Base(result.value, result.scale));
+        }
+
+        return Numeric.#from(result);
+    }
+
+    /**
      * Wraps the result of an operation, skipping the input checks of the public
      * constructor: operations always give a `bigint` value and an integer scale. Only the
      * maximum scale is checked (by `Base`), since a product may exceed it.
@@ -183,7 +197,7 @@ export class Numeric {
      */
     add(n: Numeric): Numeric {
         const r = add(this.#value, n.#value);
-        return Numeric.#from(r);
+        return Numeric.#fromSum(r, this.#value, n.#value);
     }
 
     /**
@@ -194,7 +208,7 @@ export class Numeric {
      */
     subtract(n: Numeric): Numeric {
         const r = subtract(this.#value, n.#value);
-        return Numeric.#from(r);
+        return Numeric.#fromSum(r, this.#value, n.#value);
     }
 
     /**

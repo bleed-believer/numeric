@@ -256,6 +256,26 @@ describe('Numeric', () => {
             t.assert.strictEqual(r.toString(), '0.5');
         });
 
+        it(`results of mixed scales: 1.1 - 0.15 → '0.95'`, (t: it.TestContext) => {
+            const r = new Numeric('1.1').subtract(new Numeric('0.15'));
+            t.assert.strictEqual(r.toString(), '0.95');
+        });
+
+        it(`results of mixed scales: -0.25 + 1.5 → '1.25'`, (t: it.TestContext) => {
+            const r = new Numeric('-0.25').add(new Numeric('1.5'));
+            t.assert.strictEqual(r.toString(), '1.25');
+        });
+
+        it(`results of mixed scales: 3 - 0.001 → '2.999'`, (t: it.TestContext) => {
+            const r = new Numeric('3').subtract(new Numeric('0.001'));
+            t.assert.strictEqual(r.toString(), '2.999');
+        });
+
+        it(`results are normalized with long values: ${'1'.repeat(30)}.${'2'.repeat(29)}5 + 0.${'0'.repeat(29)}5`, (t: it.TestContext) => {
+            const r = new Numeric(`${'1'.repeat(30)}.${'2'.repeat(29)}5`).add(new Numeric(`0.${'0'.repeat(29)}5`));
+            t.assert.strictEqual(r.toString(), `${'1'.repeat(30)}.${'2'.repeat(28)}3`);
+        });
+
         it(`results without trailing zeros are kept: 1.25 + 0.01 → '1.26'`, (t: it.TestContext) => {
             const r = new Numeric('1.25').add(new Numeric('0.01'));
             t.assert.strictEqual(r.toString(), '1.26');

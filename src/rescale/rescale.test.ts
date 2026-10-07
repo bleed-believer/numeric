@@ -231,6 +231,40 @@ describe('rescale(BaseObject, number, RoundMode) modes', () => {
         });
     });
 
+    // The same cases with values beyond 64 bits, dropping 20 digits: a big integer part
+    // followed by a discarded part below the half, at the half, or above it.
+    const big = 123456789012345678901234567890n;
+    const halfOf20 = 5n * 10n ** 19n;
+    const bigTable: [string, bigint, Record<RoundMode, bigint>][] = [
+        [ 'below the half', big * 10n ** 20n + halfOf20 - 1n,
+            { up: big + 1n, down: big, ceiling: big + 1n, floor: big, 'half-up': big, 'half-down': big, 'half-even': big } ],
+        [ 'a tie (even)', big * 10n ** 20n + halfOf20,
+            { up: big + 1n, down: big, ceiling: big + 1n, floor: big, 'half-up': big + 1n, 'half-down': big, 'half-even': big } ],
+        [ 'a tie (odd)', (big + 1n) * 10n ** 20n + halfOf20,
+            { up: big + 2n, down: big + 1n, ceiling: big + 2n, floor: big + 1n, 'half-up': big + 2n, 'half-down': big + 1n, 'half-even': big + 2n } ],
+        [ 'above the half', big * 10n ** 20n + halfOf20 + 1n,
+            { up: big + 1n, down: big, ceiling: big + 1n, floor: big, 'half-up': big + 1n, 'half-down': big + 1n, 'half-even': big + 1n } ],
+        [ 'exact', big * 10n ** 20n,
+            { up: big, down: big, ceiling: big, floor: big, 'half-up': big, 'half-down': big, 'half-even': big } ],
+    ];
+
+    for (const [label, value, expected] of bigTable) {
+        for (const mode of modes) {
+            it(`beyond 64 bits, ${label}, RoundMode.${mode}`, (t: it.TestContext) => {
+                const positive = rescale({ value, scale: 20 }, 0, mode);
+                t.assert.strictEqual(positive.value, expected[mode]);
+
+                // Negatives mirror the positives, swapping Ceiling and Floor.
+                const mirror = mode === RoundMode.Ceiling
+                ?   RoundMode.Floor
+                :   mode === RoundMode.Floor ? RoundMode.Ceiling : mode;
+
+                const negative = rescale({ value: -value, scale: 20 }, 0, mode);
+                t.assert.strictEqual(negative.value, -expected[mirror]);
+            });
+        }
+    }
+
     it('defaults to RoundMode.HalfUp', (t: it.TestContext) => {
         const a = { value: -25n, scale: 1 };
         t.assert.strictEqual(rescale(a, 0).value, rescale(a, 0, RoundMode.HalfUp).value);

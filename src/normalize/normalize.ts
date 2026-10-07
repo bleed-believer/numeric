@@ -13,7 +13,13 @@ export function normalize(target: BaseObject): BaseObject {
     }
 
     // Most values have no trailing zeros, so they are returned as is, without allocating.
-    if (target.scale === 0 || target.value % 10n !== 0n) {
+    // `% 10n` costs more the longer the value is, so odd values (which never end in 0) are
+    // discarded first by their lowest bit, which costs the same at any length.
+    if (
+        target.scale === 0 ||
+        BigInt.asUintN(1, target.value) === 1n ||
+        target.value % 10n !== 0n
+    ) {
         return target;
     }
 

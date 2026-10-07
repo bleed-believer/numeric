@@ -104,4 +104,27 @@ describe('normalize(BaseObject) operator', () => {
         t.assert.strictEqual(r.scale, 0);
         t.assert.strictEqual(r.value, 1n);
     });
+
+    it('returns the same object for an odd value', (t: it.TestContext) => {
+        const target = { value: -12345n, scale: 2 };
+        t.assert.strictEqual(normalize(target), target);
+    });
+
+    it('returns the same object for an even value without trailing zeros', (t: it.TestContext) => {
+        const target = { value: -1234n, scale: 2 };
+        t.assert.strictEqual(normalize(target), target);
+    });
+
+    it('removes zeros from values longer than 64 bits', (t: it.TestContext) => {
+        const r = normalize({ value: -(7n * 10n ** 40n), scale: 45 });
+        t.assert.strictEqual(r.scale, 5);
+        t.assert.strictEqual(r.value, -7n);
+    });
+
+    it('returns the same object for odd and even values longer than 64 bits', (t: it.TestContext) => {
+        for (const value of [ 10n ** 40n + 1n, -(10n ** 40n + 2n) ]) {
+            const target = { value, scale: 45 };
+            t.assert.strictEqual(normalize(target), target);
+        }
+    });
 });
