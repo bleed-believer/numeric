@@ -1,14 +1,44 @@
 {
   "name": "@bleed-believer/numeric",
-  "type": "module",
   "version": "0.0.0",
+  "description": "Exact, arbitrary-precision decimal numbers backed by bigint, with fixed-point arithmetic, explicit rounding modes and no implicit conversions.",
+  "keywords": [
+    "decimal",
+    "numeric",
+    "bigint",
+    "bignumber",
+    "big-decimal",
+    "arbitrary-precision",
+    "fixed-point",
+    "money",
+    "currency",
+    "rounding",
+    "math"
+  ],
+  "license": "MIT",
+  "author": "BleedBeliever",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/bleed-believer/numeric.git"
+  },
+  "bugs": {
+    "url": "https://github.com/bleed-believer/numeric/issues"
+  },
+  "homepage": "https://github.com/bleed-believer/numeric#readme",
+  "type": "module",
+  "engines": {
+    "node": ">=20.0.0"
+  },
+  "sideEffects": false,
+  "files": [
+    "dist"
+  ],
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",
       "import": "./dist/index.js"
     }
   },
-  "files": [ "dist" ],
   "publishConfig": {
     "access": "public"
   },
@@ -18,7 +48,8 @@
     "build:cls": "rm -rf ./dist",
     "build:mjs": "bleed build --config ./tsconfig.build.json",
     "build:dts": "tsc --project ./tsconfig.build.json",
-    "build": "node --run build:cls && node --run build:mjs && node --run build:dts"
+    "build": "node --run build:cls && node --run build:mjs && node --run build:dts",
+    "prepublishOnly": "node --run build"
   },
   "devDependencies": {
     "@bleed-believer/cli": "^1.1.0",
