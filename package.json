@@ -9,6 +9,9 @@
     }
   },
   "files": [ "dist" ],
+  "publishConfig": {
+    "access": "public"
+  },
   "scripts": {
     "test-only": "node --import @bleed-believer/cli --test --test-only --",
     "test": "node --import @bleed-believer/cli --test --",

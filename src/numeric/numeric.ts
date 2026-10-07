@@ -1,7 +1,8 @@
 import type { BaseObject } from './interfaces/index.js';
 import type { RoundMode } from '../rescale/index.js';
 
-import { add, multiply, split, subtract } from '../operators/index.js';
+import { abs, add, multiply, negate, split, subtract } from '../operators/index.js';
+import { compare, equals, sign } from '../comparators/index.js';
 import { normalize } from '../normalize/index.js';
 import { rescale } from '../rescale/index.js';
 import { Base } from '../base/index.js';
@@ -147,6 +148,33 @@ export class Numeric {
     }
 
     /**
+     * Returns the same string as `toString()`, so `JSON.stringify` writes the exact value
+     * (as a string, since a JSON number would lose precision once parsed).
+     *
+     * @example
+     * JSON.stringify({ total: new Numeric('1.50') }); // '{"total":"1.5"}'
+     */
+    toJSON(): string {
+        return this.#value.toString();
+    }
+
+    /**
+     * Always throws. Without it, operators like `<`, `>`, `+` or `==` would silently convert
+     * both sides to strings (`'10' < '9'` is `true`) or concatenate them. Use the methods
+     * instead: `lt`, `gt`, `add`, `equals`, etc. Converting to a string still works through
+     * `toString()`, `String(n)` and template literals.
+     *
+     * @throws {TypeError} Always.
+     */
+    valueOf(): never {
+        throw new TypeError(
+            'A Numeric can\'t be converted to a primitive implicitly. ' +
+            'Use its methods to compare or operate (lt, gt, equals, add...), ' +
+            'or toString() to get its value'
+        );
+    }
+
+    /**
      * Returns the value as a string with exactly `decimals` digits after the decimal point,
      * padding with zeros or rounding with `mode` (`RoundMode.HalfUp` by default) as needed.
      * Unlike the arithmetic methods, the result is never normalized: `5` with 2 decimals
@@ -249,5 +277,120 @@ export class Numeric {
         Base.validateScale(decimals);
         const r = split(this.#value, n.#value, decimals, mode);
         return Numeric.#from(r);
+    }
+
+    /**
+     * Returns the value with its sign flipped.
+     *
+     * @example
+     * new Numeric('1.5').negate().toString(); // "-1.5"
+     */
+    negate(): Numeric {
+        // The digits don't change, so the result is already normalized.
+        const r = negate(this.#value);
+        return new Numeric(new Base(r.value, r.scale));
+    }
+
+    /**
+     * Returns the absolute value. Since instances are immutable, a non-negative value
+     * returns itself.
+     *
+     * @example
+     * new Numeric('-1.5').abs().toString(); // "1.5"
+     */
+    abs(): Numeric {
+        const r = abs(this.#value);
+        if (r === this.#value) {
+            return this;
+        }
+
+        return new Numeric(new Base(r.value, r.scale));
+    }
+
+    /**
+     * Returns `true` if the value is zero.
+     */
+    isZero(): boolean {
+        return this.#value.value === 0n;
+    }
+
+    /**
+     * Returns `-1` if the value is negative, `1` if it's positive, or `0` if it's zero.
+     */
+    sign(): -1 | 0 | 1 {
+        return sign(this.#value);
+    }
+
+    /**
+     * Returns `-1` if this value is less than `n`, `0` if both are equal, or `1` if this
+     * value is greater than `n`. Useful as a sort callback:
+     *
+     * @example
+     * values.sort((a, b) => a.compare(b));
+     * new Numeric('0.9').compare(new Numeric('0.12')); // 1
+     */
+    compare(n: Numeric): -1 | 0 | 1 {
+        return compare(this.#value, n.#value);
+    }
+
+    /**
+     * Returns `true` if this value and `n` represent the same number, regardless of how
+     * they were written.
+     *
+     * @example
+     * new Numeric('1.50').equals(new Numeric('1.5')); // true
+     */
+    equals(n: Numeric): boolean {
+        return equals(this.#value, n.#value);
+    }
+
+    /**
+     * Returns `true` if this value is less than `n`.
+     */
+    lt(n: Numeric): boolean {
+        return compare(this.#value, n.#value) < 0;
+    }
+
+    /**
+     * Returns `true` if this value is less than or equal to `n`.
+     */
+    lte(n: Numeric): boolean {
+        return compare(this.#value, n.#value) <= 0;
+    }
+
+    /**
+     * Returns `true` if this value is greater than `n`.
+     */
+    gt(n: Numeric): boolean {
+        return compare(this.#value, n.#value) > 0;
+    }
+
+    /**
+     * Returns `true` if this value is greater than or equal to `n`.
+     */
+    gte(n: Numeric): boolean {
+        return compare(this.#value, n.#value) >= 0;
+    }
+
+    /**
+     * Returns the smaller of this value and `n`. When both are equal, this value is
+     * returned.
+     *
+     * @example
+     * new Numeric('0.9').min(new Numeric('0.12')).toString(); // "0.12"
+     */
+    min(n: Numeric): Numeric {
+        return compare(this.#value, n.#value) <= 0 ? this : n;
+    }
+
+    /**
+     * Returns the greater of this value and `n`. When both are equal, this value is
+     * returned.
+     *
+     * @example
+     * new Numeric('0.9').max(new Numeric('0.12')).toString(); // "0.9"
+     */
+    max(n: Numeric): Numeric {
+        return compare(this.#value, n.#value) >= 0 ? this : n;
     }
 }
