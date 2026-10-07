@@ -75,4 +75,33 @@ describe('normalize(BaseObject) operator', () => {
         t.assert.strictEqual(a.scale, 3);
         t.assert.strictEqual(a.value, 1500n);
     });
+
+    it('returns the same object when there is nothing to remove', (t: it.TestContext) => {
+        const target = { value: 125n, scale: 2 };
+        t.assert.strictEqual(normalize(target), target);
+    });
+
+    it('returns the same object for an integer', (t: it.TestContext) => {
+        const target = { value: 100n, scale: 0 };
+        t.assert.strictEqual(normalize(target), target);
+    });
+
+    it('doesn\'t modify the target when removing zeros', (t: it.TestContext) => {
+        const target = { value: 1500n, scale: 3 };
+        const r = normalize(target);
+        t.assert.notStrictEqual(r, target);
+        t.assert.deepStrictEqual(target, { value: 1500n, scale: 3 });
+    });
+
+    it('-1.500 → -1.5', (t: it.TestContext) => {
+        const r = normalize({ value: -1500n, scale: 3 });
+        t.assert.strictEqual(r.scale, 1);
+        t.assert.strictEqual(r.value, -15n);
+    });
+
+    it('1.0 → 1 (a single zero)', (t: it.TestContext) => {
+        const r = normalize({ value: 10n, scale: 1 });
+        t.assert.strictEqual(r.scale, 0);
+        t.assert.strictEqual(r.value, 1n);
+    });
 });

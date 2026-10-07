@@ -28,6 +28,16 @@ const DECIMAL_REGEX = /^-?[0-9]+(?:\.[0-9]+)?$/;
  * a.toFixed(3);            // "0.100"
  */
 export class Numeric {
+    /**
+     * Wraps the result of an operation, skipping the input checks of the public
+     * constructor: operations always give a `bigint` value and an integer scale. Only the
+     * maximum scale is checked (by `Base`), since a product may exceed it.
+     */
+    static #from(result: BaseObject): Numeric {
+        const { value, scale } = normalize(result);
+        return new Numeric(new Base(value, scale));
+    }
+
     #value: Base;
 
     /**
@@ -85,7 +95,11 @@ export class Numeric {
             }
 
             default: {
-                if (
+                // Internal shortcut: a `Base` (which isn't exported) is only built by
+                // `Numeric.#from`, already normalized and validated, so it is adopted as is.
+                if (input instanceof Base) {
+                    this.#value = input;
+                } else if (
                     typeof input?.value === 'bigint' &&
                     typeof input?.scale === 'number'
                 ) {
@@ -135,6 +149,8 @@ export class Numeric {
      * new Numeric('2.5').toFixed(0, RoundMode.HalfEven);   // "2"
      */
     toFixed(decimals: number, mode?: RoundMode): string {
+        // Validated before rescaling, which would otherwise build a huge power of ten.
+        Base.validateScale(decimals);
         const { value, scale } = rescale(this.#value, decimals, mode);
         return new Base(value, scale).toString();
     }
@@ -154,8 +170,9 @@ export class Numeric {
      * new Numeric('5').round(2).toString();                    // "5"
      */
     round(decimals: number, mode?: RoundMode): Numeric {
+        Base.validateScale(decimals);
         const r = rescale(this.#value, decimals, mode);
-        return new Numeric(r);
+        return Numeric.#from(r);
     }
 
     /**
@@ -166,7 +183,7 @@ export class Numeric {
      */
     add(n: Numeric): Numeric {
         const r = add(this.#value, n.#value);
-        return new Numeric(r);
+        return Numeric.#from(r);
     }
 
     /**
@@ -177,7 +194,7 @@ export class Numeric {
      */
     subtract(n: Numeric): Numeric {
         const r = subtract(this.#value, n.#value);
-        return new Numeric(r);
+        return Numeric.#from(r);
     }
 
     /**
@@ -193,7 +210,7 @@ export class Numeric {
      */
     multiply(n: Numeric): Numeric {
         const r = multiply(this.#value, n.#value);
-        return new Numeric(r);
+        return Numeric.#from(r);
     }
 
     /**
@@ -215,7 +232,8 @@ export class Numeric {
      * one.split(new Numeric('2'), 6).toString();                       // "0.5"
      */
     split(n: Numeric, decimals: number, mode?: RoundMode): Numeric {
+        Base.validateScale(decimals);
         const r = split(this.#value, n.#value, decimals, mode);
-        return new Numeric(r);
+        return Numeric.#from(r);
     }
 }

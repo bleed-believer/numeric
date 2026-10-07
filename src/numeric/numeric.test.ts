@@ -228,4 +228,105 @@ describe('Numeric', () => {
             t.assert.throws(() => new Numeric(`1.${'0'.repeat(16384)}`), RangeError);
         });
     });
+
+    describe('Numeric operations', () => {
+        it(`results are normalized: 0.5 + 0.5 → '1'`, (t: it.TestContext) => {
+            const r = new Numeric('0.5').add(new Numeric('0.5'));
+            t.assert.strictEqual(r.toString(), '1');
+        });
+
+        it(`results are normalized: 1.5 - 1.5 → '0'`, (t: it.TestContext) => {
+            const r = new Numeric('1.5').subtract(new Numeric('1.5'));
+            t.assert.strictEqual(r.toString(), '0');
+            t.assert.strictEqual(r.toFixed(1), '0.0');
+        });
+
+        it(`results are normalized: 1.25 × 4 → '5'`, (t: it.TestContext) => {
+            const r = new Numeric('1.25').multiply(new Numeric('4'));
+            t.assert.strictEqual(r.toString(), '5');
+        });
+
+        it(`results are normalized: round(1.2001, 2) → '1.2'`, (t: it.TestContext) => {
+            const r = new Numeric('1.2001').round(2);
+            t.assert.strictEqual(r.toString(), '1.2');
+        });
+
+        it(`results are normalized: 1 / 2 at 6 decimals → '0.5'`, (t: it.TestContext) => {
+            const r = new Numeric('1').split(new Numeric('2'), 6);
+            t.assert.strictEqual(r.toString(), '0.5');
+        });
+
+        it(`results without trailing zeros are kept: 1.25 + 0.01 → '1.26'`, (t: it.TestContext) => {
+            const r = new Numeric('1.25').add(new Numeric('0.01'));
+            t.assert.strictEqual(r.toString(), '1.26');
+        });
+
+        it(`results are new Numeric instances and the operands don't change`, (t: it.TestContext) => {
+            const a = new Numeric('1.5');
+            const b = new Numeric('2.25');
+            const results = [
+                a.add(b), a.subtract(b), a.multiply(b), a.split(b, 4), a.round(0)
+            ];
+
+            for (const r of results) {
+                t.assert.ok(r instanceof Numeric);
+                t.assert.notStrictEqual(r, a);
+                t.assert.notStrictEqual(r, b);
+            }
+
+            t.assert.strictEqual(a.toString(), '1.5');
+            t.assert.strictEqual(b.toString(), '2.25');
+        });
+
+        it(`results can be chained`, (t: it.TestContext) => {
+            const r = new Numeric('19.99')
+                .multiply(new Numeric('3'))
+                .multiply(new Numeric('1.21'))
+                .round(2);
+
+            t.assert.strictEqual(r.toString(), '72.56');
+        });
+
+        it(`a product beyond the maximum scale → RangeError`, (t: it.TestContext) => {
+            const a = new Numeric(`0.${'0'.repeat(8999)}1`);
+            t.assert.throws(() => a.multiply(a), RangeError);
+        });
+
+        it(`a product beyond the maximum scale is accepted if normalizing brings it back`, (t: it.TestContext) => {
+            // 5^3000 × 2^3000 = 10^3000: at scale 18000 it normalizes to 1 at scale 15000.
+            const a = new Numeric({ value: 5n ** 3000n, scale: 9000 });
+            const b = new Numeric({ value: 2n ** 3000n, scale: 9000 });
+            const r = a.multiply(b);
+            t.assert.strictEqual(r.toFixed(15000), `0.${'0'.repeat(14999)}1`);
+        });
+
+        for (const decimals of [ -1, 1.5, NaN, Infinity, 16384, 1e9 ]) {
+            it(`round(${decimals}) → RangeError`, (t: it.TestContext) => {
+                t.assert.throws(() => new Numeric('1.5').round(decimals), RangeError);
+            });
+
+            it(`round(${decimals}) of zero → RangeError`, (t: it.TestContext) => {
+                t.assert.throws(() => new Numeric('0').round(decimals), RangeError);
+            });
+
+            it(`split(3, ${decimals}) → RangeError`, (t: it.TestContext) => {
+                const n = new Numeric('1.5');
+                t.assert.throws(() => n.split(new Numeric('3'), decimals), RangeError);
+            });
+
+            it(`toFixed(${decimals}) → RangeError`, (t: it.TestContext) => {
+                t.assert.throws(() => new Numeric('1.5').toFixed(decimals), RangeError);
+            });
+        }
+
+        it(`round with a non-number decimals → TypeError`, (t: it.TestContext) => {
+            const n = new Numeric('1.5');
+            t.assert.throws(() => n.round('2' as unknown as number), TypeError);
+        });
+
+        it(`split by zero → RangeError`, (t: it.TestContext) => {
+            const n = new Numeric('1.5');
+            t.assert.throws(() => n.split(new Numeric('0'), 2), RangeError);
+        });
+    });
 });
