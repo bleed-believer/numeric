@@ -1,6 +1,6 @@
 {
   "name": "@bleed-believer/numeric",
-  "version": "0.0.0",
+  "version": "1.0.0",
   "description": "Exact, arbitrary-precision decimal numbers backed by bigint, with fixed-point arithmetic, explicit rounding modes and no implicit conversions.",
   "keywords": [
     "decimal",
